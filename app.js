@@ -43,195 +43,90 @@ document.querySelectorAll('.calculator-card').forEach(card => {
 });
 
 // Semestr Bal Hesablama
-function generateSeminarInputs() {
-    const count = parseInt(document.getElementById('seminarCount').value);
-    const container = document.getElementById('seminarInputs');
-    
-    if (!count || count < 1 || count > 11) {
-        alert('Seminar sayı 1-11 arasında olmalıdır!');
-        return;
-    }
-    
-    let html = '<div class="dynamic-inputs">';
-    for (let i = 1; i <= count; i++) {
-        html += `
-            <div class="dynamic-input">
-                <label>Seminar ${i}</label>
-                <input type="number" id="seminar${i}" min="0" max="10" step="0.1" placeholder="0-10">
-            </div>
-        `;
-    }
-    html += '</div>';
-    container.innerHTML = html;
-}
-
-function generateKollokInputs() {
-    const count = parseInt(document.getElementById('kollokCount').value);
-    const container = document.getElementById('kollokInputs');
-    
-    if (!count || count < 1 || count > 4) {
-        alert('Kollekvium sayı 1-4 arasında olmalıdır!');
-        return;
-    }
-    
-    let html = '<div class="dynamic-inputs">';
-    for (let i = 1; i <= count; i++) {
-        html += `
-            <div class="dynamic-input">
-                <label>Kollekvium ${i}</label>
-                <input type="number" id="kollok${i}" min="0" max="10" step="0.1" placeholder="0-10">
-            </div>
-        `;
-    }
-    html += '</div>';
-    container.innerHTML = html;
-}
-
-function calculateAttendance(hours, absences) {
-    const rules = {
-        30: { 10: [0], 9: [1, 2], 8: [3], kesr: 4 },
-        45: { 10: [0, 1], 9: [2, 3], 8: [4, 5], kesr: 6 },
-        60: { 10: [0, 1], 9: [2, 3, 4], 8: [5, 6, 7], kesr: 8 },
-        75: { 10: [0, 1], 9: [2, 3, 4, 5], 8: [6, 7, 8, 9], kesr: 10 },
-        90: { 10: [0, 1, 2], 9: [3, 4, 5, 6], 8: [7, 8, 9, 10, 11], kesr: 12 },
-        105: { 10: [0, 1, 2], 9: [3, 4, 5, 6, 7], 8: [8, 9, 10, 11, 12, 13], kesr: 14 }
-    };
-    
-    const rule = rules[hours];
-    if (!rule) return 0;
-    
-    if (absences >= rule.kesr) return 'KƏSR';
-    if (rule[10].includes(absences)) return 10;
-    if (rule[9].includes(absences)) return 9;
-    if (rule[8].includes(absences)) return 8;
-    return 0;
-}
-
 function calculateSemester() {
     const seminarCount = parseInt(document.getElementById('seminarCount').value);
     const kollokCount = parseInt(document.getElementById('kollokCount').value);
     const serbestInput = document.getElementById('serbest').value;
     const hours = parseInt(document.getElementById('hourSelect').value);
     const absences = parseInt(document.getElementById('absences').value);
-    
+
     if (!seminarCount || !kollokCount) {
         alert('Zəhmət olmasa seminar və kollekvium saylarını yaradın!');
         return;
     }
-    
-    if (!serbestInput || !hours || absences === '' || isNaN(absences)) {
+
+    if (!serbestInput || isNaN(hours) || isNaN(absences)) {
         alert('Zəhmət olmasa bütün məlumatları daxil edin!');
         return;
     }
-    
-    // Calculate seminar average
+
+    // ===== Seminar ortalaması =====
     let seminarSum = 0;
-    let seminarValid = true;
     for (let i = 1; i <= seminarCount; i++) {
         const value = parseFloat(document.getElementById(`seminar${i}`).value);
         if (isNaN(value) || value < 0 || value > 10) {
-            seminarValid = false;
-            break;
+            alert('Seminar qiymətləri 0-10 aralığında olmalıdır!');
+            return;
         }
         seminarSum += value;
     }
-    
-    if (!seminarValid) {
-        alert('Seminar qiymətləri 0-10 aralığında olmalıdır!');
-        return;
-    }
-    
     const seminarAvg = seminarSum / seminarCount;
-    
-    // Calculate kollok average
+
+    // ===== Kollekvium ortalaması =====
     let kollokSum = 0;
-    let kollokValid = true;
     for (let i = 1; i <= kollokCount; i++) {
         const value = parseFloat(document.getElementById(`kollok${i}`).value);
         if (isNaN(value) || value < 0 || value > 10) {
-            kollokValid = false;
-            break;
+            alert('Kollekvium qiymətləri 0-10 aralığında olmalıdır!');
+            return;
         }
         kollokSum += value;
     }
-    
-    if (!kollokValid) {
-        alert('Kollekvium qiymətləri 0-10 aralığında olmalıdır!');
-        return;
-    }
-    
     const kollokAvg = kollokSum / kollokCount;
-    
-    // Validate serbest (0-10)
+
+    // ===== Seminar + Kollok (maks 30 bal) =====
+    const semesterScore = (seminarAvg * 0.4 + kollokAvg * 0.6) * 3;
+
+    // ===== Sərbəst iş (maks 10 bal) =====
     const serbest = parseFloat(serbestInput);
     if (isNaN(serbest) || serbest < 0 || serbest > 10) {
         alert('Sərbəst iş qiyməti 0-10 aralığında olmalıdır!');
         return;
     }
-    
-    // Calculate attendance
-    const attendanceResult = calculateAttendance(hours, absences);
-    
-    if (attendanceResult === 'KƏSR') {
+
+    // ===== Davamiyyət (maks 10 bal) =====
+    const attendance = calculateAttendance(hours, absences);
+
+    if (attendance === 'KƏSR') {
         document.getElementById('semesterResult').innerHTML = `
-            <div style="text-align: center;">
-                <div style="font-size: 48px; margin-bottom: 20px;">❌</div>
-                <div class="final-score">KƏSR</div>
-                <p style="font-size: 18px;">Davamiyyət səbəbindən kəsr aldınız!</p>
-                <p style="margin-top: 15px; font-size: 14px; opacity: 0.9;">
-                    <strong>${hours} saat üçün ${absences} qayıb</strong> - maksimum limit keçildi.
-                </p>
+            <div style="text-align:center;">
+                <h2>❌ KƏSR</h2>
+                <p>Davamiyyət limitini keçdiniz.</p>
             </div>
         `;
         return;
     }
-    
-    // DÜSTUR: (Seminar orta × 0.4 + Kollokvium orta × 0.6) × 3 + Davamiyyət + Sərbəst iş
-    // Seminar + Kollekvium birlikdə maksimum 30 bal
-    const seminarKollokScore = (seminarAvg * 0.4 + kollokAvg * 0.6) * 3;
-    
-    // Davamiyyət balı (0, 8, 9 və ya 10)
-    const attendanceScore = attendanceResult;
-    
-    // Sərbəst iş (0-10)
-    const serbestScore = serbest;
-    
-    // Yekun bal
-    const finalScore = seminarKollokScore + attendanceScore + serbestScore;
-    
-    // Determine status
+
+    // ===== Final hesab =====
+    const finalScore = semesterScore + attendance + serbest;
+
+    // ===== Status =====
     let status = '';
-    let emoji = '';
     if (finalScore >= 50) {
         status = '🎉 MÜVƏFFƏQİYYƏTLƏ KEÇDİNİZ!';
-        emoji = '✅';
     } else if (finalScore >= 40) {
         status = '⚠️ ORTA NƏTİCƏ';
-        emoji = '📊';
-    } else if (finalScore > 0) {
-        status = '⚠️ AŞAĞI NƏTİCƏ';
-        emoji = '📉';
     } else {
-        status = '⚠️ 0 BAL';
-        emoji = '⚠️';
+        status = '⚠️ AŞAĞI NƏTİCƏ';
     }
-    
+
     document.getElementById('semesterResult').innerHTML = `
-        <div style="text-align: center;">
-            <div style="font-size: 48px; margin-bottom: 10px;">${emoji}</div>
-            <div class="final-score">${finalScore.toFixed(2)} bal</div>
-            <div style="font-size: 20px; font-weight: 600; margin-bottom: 25px;">${status}</div>
-        </div>
-        <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 12px; margin-top: 20px;">
-            <strong>📊 DETALLI NƏTİCƏLƏR:</strong><br><br>
-            🎯 Seminar ortalaması: <strong>${seminarAvg.toFixed(2)}</strong><br>
-            📝 Kollekvium ortalaması: <strong>${kollokAvg.toFixed(2)}</strong><br>
-            🔢 Seminar + Kollekvium balı (maks 30): <strong>${seminarKollokScore.toFixed(2)}</strong><br>
-            ✅ Davamiyyət balı (${hours} saat, ${absences} qayıb): <strong>${attendanceScore}</strong><br>
-            📚 Sərbəst iş balı (maks 10): <strong>${serbestScore.toFixed(2)}</strong><br><br>
-            <div style="border-top: 2px solid rgba(255,255,255,0.3); padding-top: 15px; margin-top: 15px;">
-                <strong>📌 YEKUN BAL: ${finalScore.toFixed(2)} / 50</strong>
-            </div>
+        <div style="text-align:center;">
+            <h2>${status}</h2>
+            <h1>${finalScore.toFixed(1)} / 50</h1>
+            <p>Seminar + Kollekvium: ${semesterScore.toFixed(1)} / 30</p>
+            <p>Davamiyyət: ${attendance} / 10</p>
+            <p>Sərbəst iş: ${serbest} / 10</p>
         </div>
     `;
 }
