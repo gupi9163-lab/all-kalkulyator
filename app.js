@@ -162,14 +162,14 @@ function calculateSemester() {
     
     const kollokAvg = kollokSum / kollokCount;
     
-    // Validate serbest (maks 10 bal)
+    // Validate serbest (0-10)
     const serbest = parseFloat(serbestInput);
     if (isNaN(serbest) || serbest < 0 || serbest > 10) {
         alert('Sərbəst iş qiyməti 0-10 aralığında olmalıdır!');
         return;
     }
     
-    // Calculate attendance (maks 10 bal)
+    // Calculate attendance
     const attendance = calculateAttendance(parseInt(hours), absences);
     
     if (attendance === 'KƏSR') {
@@ -186,17 +186,9 @@ function calculateSemester() {
         return;
     }
     
-    // Seminar və Kollekvium birlikdə - maks 30 bal
+    // DÜSTUR: (Seminar orta × 0.4 + Kollokvium orta × 0.6) × 3 + Davamiyyət + Sərbəst iş
     const seminarKollokScore = (seminarAvg * 0.4 + kollokAvg * 0.6) * 3;
-    
-    // Sərbəst iş - maks 10 bal (ayrıca)
-    const serbestScore = serbest;
-    
-    // Davamiyyət - maks 10 bal (ayrıca)
-    const attendanceScore = attendance;
-    
-    // YEKUN = Seminar+Kollok (30) + Sərbəst (10) + Davamiyyət (10) = 50 bal
-    const finalScore = seminarKollokScore + serbestScore + attendanceScore;
+    const finalScore = seminarKollokScore + attendance + serbest;
     
     // Determine status
     let status = '';
@@ -225,15 +217,16 @@ function calculateSemester() {
             <strong>📊 DETALLI NƏTİCƏLƏR:</strong><br><br>
             🎯 Seminar ortalaması: <strong>${seminarAvg.toFixed(2)}</strong><br>
             📝 Kollekvium ortalaması: <strong>${kollokAvg.toFixed(2)}</strong><br>
-            🔢 Seminar + Kollekvium balı (maks 30): <strong>${seminarKollokScore.toFixed(2)}</strong><br>
-            📚 Sərbəst iş (maks 10): <strong>${serbestScore.toFixed(2)}</strong><br>
-            ✅ Davamiyyət (maks 10) - ${hours} saat, ${absences} qayıb: <strong>${attendanceScore}</strong><br><br>
+            🔢 Seminar + Kollekvium balı: <strong>${seminarKollokScore.toFixed(2)}</strong><br>
+            📚 Sərbəst iş: <strong>${serbest.toFixed(2)}</strong><br>
+            ✅ Davamiyyət (${hours} saat, ${absences} qayıb): <strong>${attendance}</strong><br><br>
             <div style="border-top: 2px solid rgba(255,255,255,0.3); padding-top: 15px; margin-top: 15px;">
                 <strong>📌 YEKUN BAL: ${finalScore.toFixed(2)} / 50</strong>
             </div>
         </div>
     `;
 }
+
 
 
 // 25% Ödəniş Hesablama
