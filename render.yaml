@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: universitet-hesablayici
+    env: static
+    buildCommand: ""
+    staticPublishPath: .
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=3600
+      - path: /manifest.json
+        name: Content-Type
+        value: application/manifest+json
+      - path: /sw.js
+        name: Service-Worker-Allowed
+        value: /
