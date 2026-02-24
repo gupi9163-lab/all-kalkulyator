@@ -169,7 +169,7 @@ function calculateSemester() {
         return;
     }
     
-    // Calculate attendance - DÜZƏLDILDI
+    // Calculate attendance
     const attendanceResult = calculateAttendance(hours, absences);
     
     if (attendanceResult === 'KƏSR') {
